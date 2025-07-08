@@ -1,12 +1,14 @@
-// @ts-check
-import { defineConfig } from 'astro/config';
-import tailwind from '@astrojs/tailwind';
+import { defineConfig } from "astro/config";
+import solidJs from "@astrojs/solid-js";
+import tailwind from "@astrojs/tailwind";
+import solidJs from "@astrojs/solid-js";
 
 // https://astro.build/config
 export default defineConfig({
-    output: 'server',
-    server: {
-        port: 3000,
-    },
-    integrations: [tailwind()],
+  site: "https://colegio-san-luis.vercel.app",
+  output: "server",
+  server: { host: true, port: 4321 },
+  adapter: vercel(),
+  integrations: [tailwind(), solidJs()],
 });
+
