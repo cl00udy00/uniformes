@@ -1,0 +1,172 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout>
+    <main class="container">
+        <div class="confirmation-card">
+            <div class="header">
+                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 12l2 2 4-4"/>
+                    <circle cx="12" cy="12" r="10"/>
+                </svg>
+                <h1>Transacción Completada Exitosamente</h1>
+            </div>
+            
+            <div class="content">
+                <p class="main-message">
+                    Estimado cliente, agradecemos sinceramente su confianza en nuestros servicios. 
+                    Su compra ha sido procesada correctamente y confirmada en nuestros sistemas.
+                </p>
+                
+                <div class="details">
+                    <p>En breve recibirá un correo electrónico con:</p>
+                    <ul>
+                        <li>Confirmación detallada de su pedido</li>
+                        <li>Información de seguimiento y entrega</li>
+                        <li>Factura electrónica correspondiente</li>
+                    </ul>
+                </div>
+                
+                <p class="closing">
+                    Valoramos su preferencia y esperamos seguir brindándole un servicio de excelencia.
+                </p>
+            </div>
+            
+            <div class="actions">
+                <button class="btn-primary">Ver Detalles del Pedido</button>
+                <a href="/uniformes" class="btn-secondary">Continuar Comprando</a>
+            </div>
+        </div>
+    </main>
+</Layout>
+
+<style>
+    .container {
+        max-width: 600px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .confirmation-card {
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 2.5rem;
+        text-align: center;
+    }
+    
+    .header {
+        margin-bottom: 2rem;
+    }
+    
+    .check-icon {
+        width: 64px;
+        height: 64px;
+        color: #059669;
+        margin: 0 auto 1rem;
+    }
+    
+    h1 {
+        color: #1f2937;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+        line-height: 1.4;
+    }
+    
+    .content {
+        text-align: left;
+        margin-bottom: 2rem;
+    }
+    
+    .main-message {
+        color: #374151;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+    
+    .details {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+    }
+    
+    .details p {
+        color: #4b5563;
+        margin-bottom: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .details ul {
+        color: #6b7280;
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+    
+    .details li {
+        margin-bottom: 0.5rem;
+        line-height: 1.5;
+    }
+    
+    .closing {
+        color: #374151;
+        font-size: 1rem;
+        line-height: 1.6;
+        margin-bottom: 0;
+    }
+    
+    .actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .btn-primary, .btn-secondary {
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: #059669;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #047857;
+    }
+    
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    
+    .btn-secondary:hover {
+        background: #e5e7eb;
+    }
+    
+    @media (max-width: 480px) {
+        .confirmation-card {
+            padding: 1.5rem;
+        }
+        
+        .actions {
+            flex-direction: column;
+        }
+        
+        .btn-primary, .btn-secondary {
+            width: 100%;
+        }
+    }
+</style>

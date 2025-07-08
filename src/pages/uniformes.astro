@@ -1,0 +1,593 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+import { createClient } from '@supabase/supabase-js';
+
+// Configuración de Supabase (reemplazar con credenciales)
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Obtener uniformes de la base de datos ordenados por ID
+let uniformes = [];
+try {
+  const { data, error } = await supabase
+    .from('uniformes')
+    .select('*')
+    .gt('stock', 0) // Solo mostrar uniformes con stock disponible
+    .order('id', { ascending: true }); // Ordenar por ID de menor a mayor
+  
+  if (error) {
+    console.error('Error al obtener uniformes:', error);
+  } else {
+    uniformes = data || [];
+  }
+} catch (error) {
+  console.error('Error de conexión:', error);
+}
+
+// Función para obtener la imagen apropiada según el género
+function obtenerImagen(uniforme) {
+  if (uniforme.genero === 'unisex') {
+    // Para prendas unisex, priorizar imagen_hombre, luego imagen_mujer
+    return uniforme.imagen_hombre || uniforme.imagen_mujer;
+  } else if (uniforme.genero === 'hombre') {
+    return uniforme.imagen_hombre;
+  } else if (uniforme.genero === 'mujer') {
+    return uniforme.imagen_mujer;
+  }
+  return null;
+}
+
+// Función para obtener el texto del género
+function obtenerTextoGenero(genero) {
+  if (genero === 'unisex') return 'Unisex';
+  if (genero === 'hombre') return 'Hombre';
+  if (genero === 'mujer') return 'Mujer';
+  return genero;
+}
+---
+
+<Layout title="Uniformes Escolares">
+  <main class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold text-center mb-8 text-gray-800">
+      Uniformes Escolares
+    </h1>
+    
+    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-8">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-blue-700">
+            Todos los uniformes son de alta calidad y cumplen con las especificaciones del colegio. Tenemos opciones para hombre, mujer y unisex.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros por género -->
+    <div class="mb-6 flex flex-wrap gap-2 justify-center">
+      <button 
+        class="px-4 py-2 rounded-lg border-2 border-blue-600 bg-blue-600 text-white transition-colors duration-200 hover:bg-blue-700"
+        data-filter="todos"
+      >
+        Todos
+      </button>
+      <button 
+        class="px-4 py-2 rounded-lg border-2 border-blue-600 text-blue-600 bg-white transition-colors duration-200 hover:bg-blue-50"
+        data-filter="hombre"
+      >
+        Hombre
+      </button>
+      <button 
+        class="px-4 py-2 rounded-lg border-2 border-blue-600 text-blue-600 bg-white transition-colors duration-200 hover:bg-blue-50"
+        data-filter="mujer"
+      >
+        Mujer
+      </button>
+      <button 
+        class="px-4 py-2 rounded-lg border-2 border-blue-600 text-blue-600 bg-white transition-colors duration-200 hover:bg-blue-50"
+        data-filter="unisex"
+      >
+        Unisex
+      </button>
+    </div>
+
+    <!-- Mensajes de notificación -->
+    <div id="notification" class="hidden fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
+      <span id="notification-text"></span>
+    </div>
+
+    {uniformes.length === 0 ? (
+      <div class="text-center py-12">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No hay uniformes disponibles</h3>
+        <p class="mt-1 text-sm text-gray-500">Actualmente no tenemos uniformes en stock.</p>
+      </div>
+    ) : (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {uniformes.map((uniforme) => {
+          const imagen = obtenerImagen(uniforme);
+          const textoGenero = obtenerTextoGenero(uniforme.genero);
+          
+          return (
+            <div 
+              class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 uniforme-card" 
+              data-uniforme-card={uniforme.id}
+              data-genero={uniforme.genero}
+            >
+              <div class="relative bg-gray-50 flex items-center justify-center p-4" style="height: 280px;">
+                {imagen ? (
+                  <img 
+                    src={imagen} 
+                    alt={`${uniforme.nombre} - ${textoGenero}`}
+                    class="max-w-full max-h-full object-contain rounded-lg shadow-sm"
+                  />
+                ) : (
+                  <div class="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center rounded-lg">
+                    <svg class="h-16 w-16 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+              
+              <div class="p-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">{uniforme.nombre}</h3>
+                
+                <div class="flex items-center justify-between mb-2">
+                  <span class={`text-sm px-2 py-1 rounded-full font-medium ${
+                    uniforme.genero === 'unisex' 
+                      ? 'bg-purple-100 text-purple-800'
+                      : uniforme.genero === 'hombre'
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-pink-100 text-pink-800'
+                  }`}>
+                    {textoGenero}
+                  </span>
+                  <span class="text-sm text-gray-600">
+                    Tallas: {uniforme.tallas}
+                  </span>
+                </div>
+                
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-2xl font-bold text-green-600">
+                    ${uniforme.precio?.toLocaleString('es-ES') || 'N/A'}
+                  </span>
+                  <span class={`text-sm px-2 py-1 rounded-full ${
+                    uniforme.stock > 10 
+                      ? 'bg-green-100 text-green-800' 
+                      : uniforme.stock > 0 
+                      ? 'bg-yellow-100 text-yellow-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`} data-stock-badge={uniforme.id}>
+                    Stock: <span data-stock-count={uniforme.id}>{uniforme.stock}</span>
+                  </span>
+                </div>
+                
+                <button 
+                  class={`w-full py-2 px-4 rounded-md font-medium transition-colors duration-200 ${
+                    uniforme.stock > 0
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                  data-uniforme-id={uniforme.id}
+                  data-precio={uniforme.precio}
+                  data-nombre={uniforme.nombre}
+                  data-stock={uniforme.stock}
+                  data-genero={uniforme.genero}
+                  disabled={uniforme.stock === 0}
+                >
+                  {uniforme.stock > 0 ? 'Agregar al Carrito' : 'Sin Stock'}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    )}
+
+    <!-- Carrito de Compras -->
+    <div id="carrito" class="fixed bottom-4 right-4 z-50">
+      <button 
+        id="toggle-carrito" 
+        class="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-3 shadow-lg transition-colors duration-200"
+      >
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9" />
+        </svg>
+        <span id="carrito-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+      </button>
+      
+      <div id="carrito-panel" class="hidden absolute bottom-16 right-0 bg-white rounded-lg shadow-xl p-4 w-80 max-h-96 overflow-y-auto">
+        <h3 class="text-lg font-semibold mb-3">Carrito de Compras</h3>
+        <div id="carrito-items" class="space-y-2">
+          <!-- Los items del carrito se agregarán aquí dinámicamente -->
+        </div>
+        <div class="border-t pt-3 mt-3">
+          <div class="flex justify-between items-center font-semibold">
+            <span>Total:</span>
+            <span id="carrito-total">$0</span>
+          </div>
+          <button 
+            id="procesar-compra" 
+            class="w-full mt-3 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md font-medium transition-colors duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            disabled
+          >
+            Procesar Compra
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de confirmación de compra -->
+    <div id="modal-compra" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+      <div class="bg-white rounded-lg p-6 max-w-md w-mx-4">
+        <h3 class="text-lg font-semibold mb-4">Confirmar Compra</h3>
+        <div id="resumen-compra" class="mb-4"></div>
+        <div class="flex space-x-3">
+          <button id="confirmar-compra" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md">
+            Confirmar
+          </button>
+          <button id="cancelar-compra" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-md">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Script para el carrito y filtros -->
+  <script>
+    // Inicializar Supabase para operaciones de pago y stock
+    let supabase;
+    (function(){
+      const script = document.createElement('script');
+      script.src = 'https://cdn.skypack.dev/@supabase/supabase-js';
+      script.onload = () => {
+        const supabaseUrl = document.querySelector('meta[name="supabase-url"]')?.content;
+        const supabaseKey = document.querySelector('meta[name="supabase-key"]')?.content;
+        // @ts-ignore
+        supabase = window.supabase = window.supabaseJs.createClient(supabaseUrl, supabaseKey);
+      };
+      script.id = 'supabase-cdn';
+      document.head.appendChild(script);
+      // Expose supabase-js globally for script tag usage
+      window.supabaseJs = window.supabaseJs || {};
+      window.supabaseJs.createClient = window.supabaseJs.createClient || function(url, key) {
+        return window.supabase.createClient(url, key);
+      };
+    })();
+
+    // Variables globales
+    let carrito = [];
+    let stockActual = {};
+    let filtroActual = 'todos';
+    
+    // Inicializar cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeApp();
+    });
+    
+    function initializeApp() {
+      console.log('Inicializando aplicación...');
+      
+      // Inicializar stock actual desde los botones
+      document.querySelectorAll('button[data-uniforme-id]').forEach(boton => {
+        const id = boton.dataset.uniformeId;
+        const stock = parseInt(boton.dataset.stock);
+        stockActual[id] = stock;
+      });
+      
+      // Obtener elementos del DOM
+      const elementos = {
+        botonesAgregar: document.querySelectorAll('button[data-uniforme-id]'),
+        botonesFilter: document.querySelectorAll('button[data-filter]'),
+        toggleCarrito: document.getElementById('toggle-carrito'),
+        carritoPanel: document.getElementById('carrito-panel'),
+        carritoCount: document.getElementById('carrito-count'),
+        carritoItems: document.getElementById('carrito-items'),
+        carritoTotal: document.getElementById('carrito-total'),
+        procesarCompra: document.getElementById('procesar-compra'),
+        modalCompra: document.getElementById('modal-compra'),
+        confirmarCompra: document.getElementById('confirmar-compra'),
+        cancelarCompra: document.getElementById('cancelar-compra'),
+        resumenCompra: document.getElementById('resumen-compra'),
+        notification: document.getElementById('notification'),
+        notificationText: document.getElementById('notification-text'),
+        carrito: document.getElementById('carrito')
+      };
+      
+      // Configurar event listeners
+      setupEventListeners(elementos);
+      
+      // Inicializar carrito
+      actualizarCarrito(elementos);
+    }
+    
+    function setupEventListeners(elementos) {
+      // Event listeners para botones de filtro
+      elementos.botonesFilter.forEach(boton => {
+        boton.addEventListener('click', function() {
+          const filtro = this.dataset.filter;
+          filtroActual = filtro;
+          
+          // Actualizar estilos de botones
+          elementos.botonesFilter.forEach(btn => {
+            btn.className = 'px-4 py-2 rounded-lg border-2 border-blue-600 text-blue-600 bg-white transition-colors duration-200 hover:bg-blue-50';
+          });
+          this.className = 'px-4 py-2 rounded-lg border-2 border-blue-600 bg-blue-600 text-white transition-colors duration-200 hover:bg-blue-700';
+          
+          // Aplicar filtro
+          aplicarFiltro(filtro);
+        });
+      });
+      
+      // Event listeners para botones de agregar al carrito
+      elementos.botonesAgregar.forEach(boton => {
+        boton.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          const id = this.dataset.uniformeId;
+          const nombre = this.dataset.nombre;
+          const precio = parseFloat(this.dataset.precio);
+          const genero = this.dataset.genero;
+          
+          if (!id || !nombre || isNaN(precio)) {
+            showNotification('Error: Datos del producto incompletos', 'error', elementos);
+            return;
+          }
+          
+          agregarAlCarrito({ id, nombre, precio, genero }, elementos);
+        });
+      });
+      
+      // Toggle carrito
+      elementos.toggleCarrito?.addEventListener('click', () => {
+        elementos.carritoPanel.classList.toggle('hidden');
+      });
+      
+      // Procesar compra
+      elementos.procesarCompra?.addEventListener('click', () => {
+        if (carrito.length === 0) {
+          showNotification('El carrito está vacío', 'error', elementos);
+          return;
+        }
+        mostrarModalCompra(elementos);
+      });
+      
+      // Confirmar compra
+      elementos.confirmarCompra?.addEventListener('click', async () => {
+        await procesarCompraFinal(elementos);
+      });
+      
+      // Cancelar compra
+      elementos.cancelarCompra?.addEventListener('click', () => {
+        elementos.modalCompra.classList.add('hidden');
+      });
+      
+      // Cerrar carrito al hacer clic fuera
+      document.addEventListener('click', (e) => {
+        if (!elementos.carrito?.contains(e.target) && !elementos.toggleCarrito?.contains(e.target)) {
+          elementos.carritoPanel?.classList.add('hidden');
+        }
+      });
+      
+      // Cerrar modal al hacer clic fuera
+      elementos.modalCompra?.addEventListener('click', (e) => {
+        if (e.target === elementos.modalCompra) {
+          elementos.modalCompra.classList.add('hidden');
+        }
+      });
+    }
+    
+    function aplicarFiltro(filtro) {
+      const tarjetas = document.querySelectorAll('.uniforme-card');
+      
+      tarjetas.forEach(tarjeta => {
+        const genero = tarjeta.dataset.genero;
+        
+        if (filtro === 'todos') {
+          tarjeta.style.display = 'block';
+        } else if (filtro === genero) {
+          tarjeta.style.display = 'block';
+        } else if (filtro === 'hombre' && genero === 'unisex') {
+          // Las prendas unisex también se muestran en filtro hombre
+          tarjeta.style.display = 'block';
+        } else if (filtro === 'mujer' && genero === 'unisex') {
+          // Las prendas unisex también se muestran en filtro mujer
+          tarjeta.style.display = 'block';
+        } else {
+          tarjeta.style.display = 'none';
+        }
+      });
+    }
+    
+    function showNotification(message, type = 'success', elementos) {
+      if (!elementos.notification || !elementos.notificationText) return;
+      
+      elementos.notificationText.textContent = message;
+      elementos.notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
+        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+      } text-white`;
+      elementos.notification.classList.remove('hidden');
+      
+      setTimeout(() => {
+        elementos.notification.classList.add('hidden');
+      }, 3000);
+    }
+    
+    function obtenerTextoGenero(genero) {
+      if (genero === 'unisex') return 'Unisex';
+      if (genero === 'hombre') return 'Hombre';
+      if (genero === 'mujer') return 'Mujer';
+      return genero;
+    }
+    
+    function agregarAlCarrito(item, elementos) {
+      const itemExistente = carrito.find(i => i.id === item.id);
+      const stockDisponible = stockActual[item.id] || 0;
+      const cantidadEnCarrito = itemExistente ? itemExistente.cantidad : 0;
+      
+      if (cantidadEnCarrito >= stockDisponible) {
+        showNotification('No hay suficiente stock disponible', 'error', elementos);
+        return;
+      }
+
+      if (itemExistente) {
+        itemExistente.cantidad += 1;
+      } else {
+        carrito.push({ ...item, cantidad: 1 });
+      }
+      
+      actualizarCarrito(elementos);
+      showNotification(`${item.nombre} (${obtenerTextoGenero(item.genero)}) agregado al carrito`, 'success', elementos);
+    }
+    
+    function removerDelCarrito(id, elementos) {
+      carrito = carrito.filter(item => item.id !== id);
+      actualizarCarrito(elementos);
+    }
+    
+    function cambiarCantidad(id, nuevaCantidad, elementos) {
+      if (nuevaCantidad <= 0) {
+        removerDelCarrito(id, elementos);
+        return;
+      }
+      
+      if (nuevaCantidad > stockActual[id]) {
+        showNotification('No hay suficiente stock disponible', 'error', elementos);
+        return;
+      }
+      
+      const item = carrito.find(i => i.id === id);
+      if (item) {
+        item.cantidad = nuevaCantidad;
+        actualizarCarrito(elementos);
+      }
+    }
+    
+    function calcularTotal() {
+      return carrito.reduce((total, item) => total + (item.precio * item.cantidad), 0);
+    }
+    
+    function actualizarCarrito(elementos) {
+      const totalItems = carrito.reduce((total, item) => total + item.cantidad, 0);
+      
+      // Actualizar contador
+      if (totalItems > 0) {
+        elementos.carritoCount.textContent = totalItems;
+        elementos.carritoCount.classList.remove('hidden');
+        elementos.procesarCompra.disabled = false;
+      } else {
+        elementos.carritoCount.classList.add('hidden');
+        elementos.procesarCompra.disabled = true;
+      }
+      
+      // Actualizar items del carrito
+      elementos.carritoItems.innerHTML = '';
+      
+      if (carrito.length === 0) {
+        elementos.carritoItems.innerHTML = '<p class="text-gray-500 text-center">El carrito está vacío</p>';
+      } else {
+        carrito.forEach(item => {
+          const itemElement = document.createElement('div');
+          itemElement.className = 'flex items-center justify-between p-2 border rounded';
+          itemElement.innerHTML = `
+            <div class="flex-1">
+              <h4 class="font-medium text-sm">${item.nombre}</h4>
+              <p class="text-xs text-gray-600">$${item.precio.toLocaleString('es-ES')} c/u</p>
+              <p class="text-xs ${
+                item.genero === 'unisex' ? 'text-purple-600' : 
+                item.genero === 'hombre' ? 'text-blue-600' : 'text-pink-600'
+              }">${obtenerTextoGenero(item.genero)}</p>
+              <p class="text-xs text-gray-500">Stock disponible: ${stockActual[item.id]}</p>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button class="text-gray-500 hover:text-red-500 btn-restar" data-id="${item.id}">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                </svg>
+              </button>
+              <span class="text-sm font-medium min-w-[20px] text-center">${item.cantidad}</span>
+              <button class="text-gray-500 hover:text-green-500 btn-sumar" data-id="${item.id}" 
+                ${item.cantidad >= stockActual[item.id] ? 'disabled' : ''}>
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </button>
+            </div>
+          `;
+          elementos.carritoItems.appendChild(itemElement);
+          
+          // Agregar event listeners a los botones
+          itemElement.querySelector('.btn-restar').addEventListener('click', () => {
+            cambiarCantidad(item.id, item.cantidad - 1, elementos);
+          });
+          
+          itemElement.querySelector('.btn-sumar').addEventListener('click', () => {
+            if (item.cantidad < stockActual[item.id]) {
+              cambiarCantidad(item.id, item.cantidad + 1, elementos);
+            }
+          });
+        });
+      }
+      
+      // Actualizar total
+      elementos.carritoTotal.textContent = `$${calcularTotal().toLocaleString('es-ES')}`;
+    }
+    
+    function mostrarModalCompra(elementos) {
+      let resumen = '<div class="space-y-2 mb-4">';
+      carrito.forEach(item => {
+        resumen += `
+          <div class="flex justify-between items-center">
+            <div>
+              <span class="font-medium">${item.nombre}</span>
+              <span class="text-sm text-gray-600 ml-2">(${obtenerTextoGenero(item.genero)})</span>
+              <span class="text-sm text-gray-600"> x${item.cantidad}</span>
+            </div>
+            <span class="font-medium">$${(item.precio * item.cantidad).toLocaleString('es-ES')}</span>
+          </div>
+        `;
+      });
+      resumen += '</div>';
+      resumen += `<div class="border-t pt-2 font-semibold">
+        <div class="flex justify-between">
+          <span>Total:</span>
+          <span>$${calcularTotal().toLocaleString('es-ES')}</span>
+        </div>
+      </div>`;
+      
+      elementos.resumenCompra.innerHTML = resumen;
+      elementos.modalCompra.classList.remove('hidden');
+    }
+    
+    async function procesarCompraFinal(elementos) {
+      window.location.href = '/gracias';
+    }
+    
+    function actualizarStockUI(uniformeId, nuevoStock) {
+      // Actualizar badge de stock
+      const stockCount = document.querySelector(`[data-stock-count="${uniformeId}"]`);
+      const boton = document.querySelector(`[data-uniforme-id="${uniformeId}"]`);
+      
+      if (stockCount) stockCount.textContent = nuevoStock;
+      
+      if (boton) {
+        boton.dataset.stock = nuevoStock;
+        if (nuevoStock === 0) {
+          boton.disabled = true;
+          boton.textContent = 'Sin Stock';
+          boton.className = 'w-full py-2 px-4 rounded-md font-medium transition-colors duration-200 bg-gray-300 text-gray-500 cursor-not-allowed';
+        }
+      }
+    }
+  </script>
+</Layout>
