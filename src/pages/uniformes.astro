@@ -158,7 +158,7 @@ function obtenerTextoGenero(genero) {
                 
                 <div class="flex items-center justify-between mb-3">
                   <span class="text-2xl font-bold text-green-600">
-                    ${uniforme.precio?.toLocaleString('es-ES') || 'N/A'}
+                    Gs  {uniforme.precio?.toLocaleString('es-ES') || 'N/A'}
                   </span>
                   <span class={`text-sm px-2 py-1 rounded-full ${
                     uniforme.stock > 10 
@@ -502,7 +502,7 @@ function obtenerTextoGenero(genero) {
           itemElement.innerHTML = `
             <div class="flex-1">
               <h4 class="font-medium text-sm">${item.nombre}</h4>
-              <p class="text-xs text-gray-600">$${item.precio.toLocaleString('es-ES')} c/u</p>
+              <p class="text-xs text-gray-600">Gs${item.precio.toLocaleString('es-ES')} c/u</p>
               <p class="text-xs ${
                 item.genero === 'unisex' ? 'text-purple-600' : 
                 item.genero === 'hombre' ? 'text-blue-600' : 'text-pink-600'
